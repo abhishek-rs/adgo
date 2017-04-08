@@ -95,23 +95,32 @@ function crunch(){
         data = Object.values(dataToBeCrunched);
         for ( i in ids){
             let dataWithId = Object.assign({ id: ids[i]}, data[i]);
-            //dataWithId.id = ids[i];
             data[i] = dataWithId;
         }
         sortMode = {};
         columns = Object.keys(data[0]);
+        
+        if(columns.find(findImpressions) && columns.find( val => val == "clicks")) 
+            addCtr('clicks');
+        
+        else if (columns.find(findImpressions) && columns.find( val => val == "social_clicks")) 
+            addCtr('social_clicks');
+
         columns.map(function(c) {
             sortMode[c] = 0;
             return;
         });
-        console.log(columns);
        buildTable(columns, data);    
 }
 
+function findImpressions(val){
+    return val === "impressions";
+}
+
 function buildTable(columns, data){
-    document.getElementById('crunched').innerHTML = "";
-    setHeaders(columns);
     let table = document.getElementById('crunched');
+    table.innerHTML = "";
+    setHeaders(columns);
     for (let i=0; i<data.length; i++){
         let dataRow = document.createElement('tr');
         for(d in Object.values(data[i])){
@@ -159,6 +168,24 @@ function buildDataElement(dataElement){
     let dataRow = document.createElement('td');
     dataRow.innerHTML = dataElement;
     return dataRow;
+}
+
+function checkIfFloat(num){
+    
+}
+
+function prependCurrency(){
+
+}
+
+function addCtr(click){
+    columns.push('ctr');
+    for ( d in data){
+            let dataWithCtr = Object.assign({ }, data[d]);
+            dataWithCtr.ctr = click === 'clicks' ? (100 / data[d].impressions) * data[d].clicks : (100 / data[d].impressions) * data[d].social_clicks;
+            console.log(data[d].impressions, data[d].clicks, data[d].social_clicks)
+            data[d] = dataWithCtr;
+    }
 }
 
 </script>
