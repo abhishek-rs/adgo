@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Adgo recruitment</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Sansita|Fira+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <style>
+        
+        body{
+            display: flex;
+            flex-direction: column;    
+            align-items: center;
+            font-family: 'Sansita', sans-serif;
+            background-color: #80DEEA;   
+            color: #283593;
+        }
+
+        h1 {
+            align-self: center;
+        }
+        
+        #data-cruncher{
+            display: flex;
+            flex-direction: column;    
+            align-items: center;
+        }
+
+        #the-crunch-zone{
+        	width: 600px;
+        	height: 120px;
+	        border: 3px solid #cccccc;
+            margin: 10px;
+	        font-family: 'Fira Sans', sans-serif;
+	    }
+
+        #submit{
+            padding: 10px;
+            color: #283593;
+            border-radius: 5px;
+            font-family: 'Fira Sans', sans-serif;
+        }
+
+        #crunched{
+            margin: 20px;
+            border-radius: 5px;
+            border: 2px solid #283593; 
+            background-color: #cccccc;
+        }
+        
+        #crunched th{
+            padding: 10px;
+            background-color: #283593;
+            color: white;
+            border: 1px solid #cccccc;
+        }
+
+        #crunched td{
+            padding: 10px;
+            background-color: white;
+            color: #283593;
+            border: 1px solid #283593;
+        }
+
+
+    </style>
+    <h1>
+        Adgo data cruncher
+    </h1>
+    <label>
+        Data to be crunched goes here 
+    <div id="data-cruncher">
+    <textarea id="the-crunch-zone">
+        
+    </textarea>
+    <button id="submit" type="submit" onclick="crunch()">Crunch!</button>
+    </div>
+
+    <table id="crunched">
+        
+    </table>
+
+<script type="text/javascript">
+
+var data, columns, sortMode; 
+
+function crunch(){
+
+        let dataToBeCrunched = JSON.parse(document.getElementById("the-crunch-zone").value).result;
+        let ids = Object.keys(dataToBeCrunched);
+        data = Object.values(dataToBeCrunched);
+        for ( i in ids){
+            let dataWithId = Object.assign({ id: ids[i]}, data[i]);
+            //dataWithId.id = ids[i];
+            data[i] = dataWithId;
+        }
+        sortMode = {};
+        columns = Object.keys(data[0]);
+        columns.map(function(c) {
+            sortMode[c] = 0;
+            return;
+        });
+        console.log(columns);
+       buildTable(columns, data);    
+}
+
+function buildTable(columns, data){
+    document.getElementById('crunched').innerHTML = "";
+    setHeaders(columns);
+    let table = document.getElementById('crunched');
+    for (let i=0; i<data.length; i++){
+        let dataRow = document.createElement('tr');
+        for(d in Object.values(data[i])){
+            let dataR = document.createElement('td');
+            dataR.innerHTML = Object.values(data[i])[d];
+            dataRow.appendChild(dataR);
+        }
+        table.appendChild(dataRow);
+    }
+}
+
+function setHeaders(columns){
+    let table = document.getElementById('crunched');
+    let headRow = document.createElement('tr');
+    let sortArrowDown = "fa fa-angle-down";
+    let sortArrowUp = "fa fa-angle-up";   
+    for (col in columns){
+        let headCol = document.createElement('th');
+        let sortArrow = (!sortMode[columns[col]]) ? sortArrowUp : sortArrowDown;
+        headCol.innerHTML = columns[col] + "<i class='" + sortArrow +"' onclick=\"sortTable('" + columns[col] +"')\"></i>";
+        headRow.appendChild(headCol);
+    }
+    table.appendChild(headRow);
+}
+
+function sortTable(colName){
+    if(sortMode[colName]==0){
+    data = data.sort(keysrt(colName ,0));
+    sortMode[colName]=1;
+    }
+    else{
+    data = data.sort(keysrt(colName ,1));
+    sortMode[colName]=0;
+    }
+    buildTable(columns, data);
+}
+
+function keysrt(key,desc) {
+  return function(a,b){
+   return desc ? (a[key] < b[key]) : (a[key] > b[key]);
+  }
+}
+
+function buildDataElement(dataElement){
+    let dataRow = document.createElement('td');
+    dataRow.innerHTML = dataElement;
+    return dataRow;
+}
+
+</script>
+
+</body>
