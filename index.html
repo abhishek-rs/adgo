@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Adgo recruitment</title>
+    <title>Adgo recruitment - Abhishek Shetty</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://fonts.googleapis.com/css?family=Sansita|Fira+Sans" rel="stylesheet">
@@ -11,17 +11,37 @@
 
 <body>
     <style>
+
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             font-family: 'Sansita', sans-serif;
-            background-color: #80DEEA;
+            background-color: #B3E5FC;
             color: #283593;
         }
 
-        h1 {
-            align-self: center;
+        i{
+            color:#283593;
+        }
+
+        .icon{
+            background-color: white;
+            padding-left: 7px;
+            padding-right: 7px;
+            padding-top: 3px;
+            padding-bottom: 3px;
+            height: 7px;
+            width: 10px;
+            top: 7px;
+            position: relative;
+            border-radius: 50%;
+            font-weight: bolder;
+            cursor: pointer;
+        }
+
+        .icon:hover{
+            background-color: #26A69A;
         }
 
         #data-cruncher {
@@ -40,47 +60,47 @@
 
         #submit {
             padding: 10px;
-            color: #283593;
+            color: white;
+            background-color: #26A69A;
             border-radius: 5px;
             font-family: 'Fira Sans', sans-serif;
+            font-size: 20px;
         }
 
         #crunched {
             margin: 20px;
             border-radius: 5px;
             border: 2px solid #283593;
-            background-color: #cccccc;
+            background-color: white;
+            -webkit-box-shadow: 3px 3px 7px 0px rgba(0,0,0,0.43);
+            -moz-box-shadow: 3px 3px 7px 0px rgba(0,0,0,0.43);
+            box-shadow: 3px 3px 7px 0px rgba(0,0,0,0.43);
         }
 
         #crunched th {
-            padding: 10px;
+            padding: 15px;
             background-color: #283593;
             color: white;
-            border: 1px solid #cccccc;
+            position: relative;
         }
 
         #crunched td {
             padding: 10px;
-            background-color: white;
+            background-color: #EEEEEE;
             color: #283593;
-            border: 1px solid #283593;
         }
+
     </style>
-    <h1>
-        Adgo data cruncher
-    </h1>
-    <label>
-        Data to be crunched goes here 
+
+    <h1> Adgo data cruncher </h1>
+    
     <div id="data-cruncher">
-    <textarea id="the-crunch-zone">
-        
-    </textarea>
-    <button id="submit" type="submit" onclick="crunch()">Crunch!</button>
+        <label> Data to be crunched goes here </label>
+        <textarea id="the-crunch-zone"> </textarea>
+        <button id="submit" type="submit" onclick="crunch()">Crunch!</button>
     </div>
 
-    <table id="crunched">
-        
-    </table>
+    <table id="crunched" style="display: none"> </table>
 
 <script type="text/javascript">
 
@@ -108,37 +128,40 @@ function crunch(){
             let ids = Object.keys(dataToBeCrunched);
             data = Object.values(dataToBeCrunched);
         
+            //add ids column to the array of data
             for ( i in ids){
                 let dataWithId = Object.assign({ id: ids[i]}, data[i]);
                 data[i] = dataWithId;
             }
         
-            sortMode = {};
-            isFloat = {};
+            sortMode = {};          //object to store current sort orders
+            isFloat = {};           //object to store if data is float
             columns = Object.keys(data[0]);
-        
+            
+            //add ctr column if impressions and social clicks or clicks are found
             if(columns.find(findImpressions) && columns.find( val => val == "clicks")) 
                 addCtr('clicks');
             else if (columns.find(findImpressions) && columns.find( val => val == "social_clicks")) 
                 addCtr('social_clicks');
             
+            //initialize sort orders
             columns.map(function(c) {
                 sortMode[c] = 0;
             });
 
-           determineFloats();
+           determineFloats(); //test first data set for columns which are float
            buildTable();
         }
 
     catch(err){
-            alert("That doesn't look crunchable mate!");
+            alert("That doesn't look crunchable mate!"); //throw error if appropriate JSON is not entered
         }    
 }
 
 function determineFloats(){
     let items = Object.values(data[0]);
     for ( i in items ){
-        isFloat[i] = items[i].toString().indexOf('.') != -1 ? 1 : 0;
+        isFloat[i] = items[i].toString().indexOf('.') != -1 ? 1 : 0;  //look for decimal to determine float
     }
 }
 
@@ -148,8 +171,9 @@ function findImpressions(val){
 
 function buildTable(){
     let table = document.getElementById('crunched');
-    table.innerHTML = "";
-    setHeaders();
+    table.setAttribute('style', 'display: block'); 
+    table.innerHTML = "";   //clear table 
+    setHeaders(); 
     
     for (let i=0; i<data.length; i++){
         let dataRow = document.createElement('tr');
@@ -158,9 +182,9 @@ function buildTable(){
         for(d in Object.values(data[i])){
             let dataItem = document.createElement('td');
             let dataToInsert = Object.values(data[i])[d];
-            if(isFloat[d])
+            if(isFloat[d] || (keys[d] == 'spend' || keys[d] == 'cpr'))  //check if float or if currency
                 dataToInsert = getFloat(dataToInsert);
-            if(keys[d] == 'spend' || keys[d] == 'ctr')
+            if(keys[d] == 'spend' || keys[d] == 'cpr') //check if currency
                 dataToInsert = getCurrency(dataToInsert);
             dataItem.innerHTML = dataToInsert;
             dataRow.appendChild(dataItem);
@@ -178,13 +202,13 @@ function setHeaders(){
     
     for (col in columns){
         let headCol = document.createElement('th');
-        let sortArrow = (!sortMode[columns[col]]) ? sortArrowUp : sortArrowDown;
+        let sortArrow = (!sortMode[columns[col]]) ? sortArrowUp : sortArrowDown;  //swap arrow direction based on sort order
         headCol.innerHTML = COLUMNS[columns[col]] 
-                            + "<i class='" 
+                            + "<br><span class='icon'><i class='" 
                             + sortArrow 
                             +"' onclick=\"sortTable('" 
                             + columns[col] 
-                            +"')\"></i>";
+                            +"')\"></span></i>";
         headRow.appendChild(headCol);
     }
    
@@ -193,11 +217,11 @@ function setHeaders(){
 
 function sortTable(colName){
     if(sortMode[colName]==0){
-        data = data.sort(keysrt(colName , 0));
+        data = data.sort(keysrt(colName , 0)); //ascending sort
         sortMode[colName]=1;
     }
     else{
-        data = data.sort(keysrt(colName , 1));
+        data = data.sort(keysrt(colName , 1)); //descending sort
         sortMode[colName]=0;
     }
     buildTable();
@@ -207,12 +231,6 @@ function keysrt(key, desc) {
   return function(a,b){
       return desc ? (a[key] < b[key]) : (a[key] > b[key]);
   }
-}
-
-function buildDataElement(dataElement){
-    let dataRow = document.createElement('td');
-    dataRow.innerHTML = dataElement;
-    return dataRow;
 }
 
 function getFloat(num){
