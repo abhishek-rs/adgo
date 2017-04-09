@@ -8,65 +8,63 @@
     <link href="https://fonts.googleapis.com/css?family=Sansita|Fira+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
+
 <body>
     <style>
-        
-        body{
+        body {
             display: flex;
-            flex-direction: column;    
+            flex-direction: column;
             align-items: center;
             font-family: 'Sansita', sans-serif;
-            background-color: #80DEEA;   
+            background-color: #80DEEA;
             color: #283593;
         }
 
         h1 {
             align-self: center;
         }
-        
-        #data-cruncher{
+
+        #data-cruncher {
             display: flex;
-            flex-direction: column;    
+            flex-direction: column;
             align-items: center;
         }
 
-        #the-crunch-zone{
-        	width: 600px;
-        	height: 120px;
-	        border: 3px solid #cccccc;
+        #the-crunch-zone {
+            width: 600px;
+            height: 120px;
+            border: 3px solid #cccccc;
             margin: 10px;
-	        font-family: 'Fira Sans', sans-serif;
-	    }
+            font-family: 'Fira Sans', sans-serif;
+        }
 
-        #submit{
+        #submit {
             padding: 10px;
             color: #283593;
             border-radius: 5px;
             font-family: 'Fira Sans', sans-serif;
         }
 
-        #crunched{
+        #crunched {
             margin: 20px;
             border-radius: 5px;
-            border: 2px solid #283593; 
+            border: 2px solid #283593;
             background-color: #cccccc;
         }
-        
-        #crunched th{
+
+        #crunched th {
             padding: 10px;
             background-color: #283593;
             color: white;
             border: 1px solid #cccccc;
         }
 
-        #crunched td{
+        #crunched td {
             padding: 10px;
             background-color: white;
             color: #283593;
             border: 1px solid #283593;
         }
-
-
     </style>
     <h1>
         Adgo data cruncher
@@ -86,81 +84,128 @@
 
 <script type="text/javascript">
 
-var data, columns, sortMode; 
+var data, columns, sortMode, isFloat; 
+
+const COLUMNS = {
+    'id': 'ID',
+    'status': 'Status',
+    'results': 'Results',
+    'impressions': 'Impressions',
+    'cpr': 'CPR',
+    'reach': 'Reach',
+    'spend': 'Spend',
+    'end_date': 'End Date',
+    'social_clicks': 'Social clicks',
+    'clicks': 'Clicks',
+    'action#video_view': 'Video View',
+    'action#video_play': 'Video Play',
+    'ctr': 'CTR'
+};
 
 function crunch(){
+    try {    
+            let dataToBeCrunched = JSON.parse(document.getElementById("the-crunch-zone").value).result;
+            let ids = Object.keys(dataToBeCrunched);
+            data = Object.values(dataToBeCrunched);
+        
+            for ( i in ids){
+                let dataWithId = Object.assign({ id: ids[i]}, data[i]);
+                data[i] = dataWithId;
+            }
+        
+            sortMode = {};
+            isFloat = {};
+            columns = Object.keys(data[0]);
+        
+            if(columns.find(findImpressions) && columns.find( val => val == "clicks")) 
+                addCtr('clicks');
+            else if (columns.find(findImpressions) && columns.find( val => val == "social_clicks")) 
+                addCtr('social_clicks');
+            
+            columns.map(function(c) {
+                sortMode[c] = 0;
+            });
 
-        let dataToBeCrunched = JSON.parse(document.getElementById("the-crunch-zone").value).result;
-        let ids = Object.keys(dataToBeCrunched);
-        data = Object.values(dataToBeCrunched);
-        for ( i in ids){
-            let dataWithId = Object.assign({ id: ids[i]}, data[i]);
-            data[i] = dataWithId;
+           determineFloats();
+           buildTable();
         }
-        sortMode = {};
-        columns = Object.keys(data[0]);
-        
-        if(columns.find(findImpressions) && columns.find( val => val == "clicks")) 
-            addCtr('clicks');
-        
-        else if (columns.find(findImpressions) && columns.find( val => val == "social_clicks")) 
-            addCtr('social_clicks');
 
-        columns.map(function(c) {
-            sortMode[c] = 0;
-            return;
-        });
-       buildTable(columns, data);    
+    catch(err){
+            alert("That doesn't look crunchable mate!");
+        }    
+}
+
+function determineFloats(){
+    let items = Object.values(data[0]);
+    for ( i in items ){
+        isFloat[i] = items[i].toString().indexOf('.') != -1 ? 1 : 0;
+    }
 }
 
 function findImpressions(val){
     return val === "impressions";
 }
 
-function buildTable(columns, data){
+function buildTable(){
     let table = document.getElementById('crunched');
     table.innerHTML = "";
-    setHeaders(columns);
+    setHeaders();
+    
     for (let i=0; i<data.length; i++){
         let dataRow = document.createElement('tr');
+        let keys = Object.keys(data[i]);
+      
         for(d in Object.values(data[i])){
-            let dataR = document.createElement('td');
-            dataR.innerHTML = Object.values(data[i])[d];
-            dataRow.appendChild(dataR);
+            let dataItem = document.createElement('td');
+            let dataToInsert = Object.values(data[i])[d];
+            if(isFloat[d])
+                dataToInsert = getFloat(dataToInsert);
+            if(keys[d] == 'spend' || keys[d] == 'ctr')
+                dataToInsert = getCurrency(dataToInsert);
+            dataItem.innerHTML = dataToInsert;
+            dataRow.appendChild(dataItem);
         }
+      
         table.appendChild(dataRow);
     }
 }
 
-function setHeaders(columns){
+function setHeaders(){
     let table = document.getElementById('crunched');
     let headRow = document.createElement('tr');
     let sortArrowDown = "fa fa-angle-down";
     let sortArrowUp = "fa fa-angle-up";   
+    
     for (col in columns){
         let headCol = document.createElement('th');
         let sortArrow = (!sortMode[columns[col]]) ? sortArrowUp : sortArrowDown;
-        headCol.innerHTML = columns[col] + "<i class='" + sortArrow +"' onclick=\"sortTable('" + columns[col] +"')\"></i>";
+        headCol.innerHTML = COLUMNS[columns[col]] 
+                            + "<i class='" 
+                            + sortArrow 
+                            +"' onclick=\"sortTable('" 
+                            + columns[col] 
+                            +"')\"></i>";
         headRow.appendChild(headCol);
     }
+   
     table.appendChild(headRow);
 }
 
 function sortTable(colName){
     if(sortMode[colName]==0){
-    data = data.sort(keysrt(colName ,0));
-    sortMode[colName]=1;
+        data = data.sort(keysrt(colName , 0));
+        sortMode[colName]=1;
     }
     else{
-    data = data.sort(keysrt(colName ,1));
-    sortMode[colName]=0;
+        data = data.sort(keysrt(colName , 1));
+        sortMode[colName]=0;
     }
-    buildTable(columns, data);
+    buildTable();
 }
 
-function keysrt(key,desc) {
+function keysrt(key, desc) {
   return function(a,b){
-   return desc ? (a[key] < b[key]) : (a[key] > b[key]);
+      return desc ? (a[key] < b[key]) : (a[key] > b[key]);
   }
 }
 
@@ -170,22 +215,25 @@ function buildDataElement(dataElement){
     return dataRow;
 }
 
-function checkIfFloat(num){
-    
+function getFloat(num){
+    return parseFloat(num).toFixed(2);
 }
 
-function prependCurrency(){
-
+function getCurrency(num){
+    return '$' + num;
 }
 
 function addCtr(click){
     columns.push('ctr');
+    
     for ( d in data){
             let dataWithCtr = Object.assign({ }, data[d]);
-            dataWithCtr.ctr = click === 'clicks' ? (100 / data[d].impressions) * data[d].clicks : (100 / data[d].impressions) * data[d].social_clicks;
-            console.log(data[d].impressions, data[d].clicks, data[d].social_clicks)
+            dataWithCtr.ctr = click === 'clicks' 
+                                    ? ((100 / data[d].impressions) * data[d].clicks).toFixed(2) 
+                                    : ((100 / data[d].impressions) * data[d].social_clicks).toFixed(2);
             data[d] = dataWithCtr;
     }
+
 }
 
 </script>
